@@ -22,15 +22,11 @@ function usePhotos(device: BluetoothRemoteGATTServer) {
     const takePhoto = React.useCallback(async () => {
         if (photoControlCharRef.current && !isCapturing) {
             try {
-                // 增加状态重置，确保每次拍照前状态干净
-                previousChunk = -1;
-                buffer = new Uint8Array(0);
-                
                 setIsCapturing(true);
                 await photoControlCharRef.current.writeValue(new Uint8Array([0x01]));
                 console.log('Capture photo command sent');
-                // 增加延迟，确保完成拍照后再允许下一次
-                setTimeout(() => setIsCapturing(false), 3000);
+                // 延迟恢复按钮状态，因为拍照需要一点时间
+                setTimeout(() => setIsCapturing(false), 2000);
             } catch (error) {
                 console.error('Error sending capture command:', error);
                 setIsCapturing(false);
@@ -48,27 +44,7 @@ function usePhotos(device: BluetoothRemoteGATTServer) {
         (async () => {
             let previousChunk = -1;
             let buffer: Uint8Array = new Uint8Array(0);
-            let photoTimeoutId: number | null = null;
-            
-            function resetPhotoState() {
-                previousChunk = -1;
-                buffer = new Uint8Array(0);
-                if (photoTimeoutId) {
-                    clearTimeout(photoTimeoutId);
-                    photoTimeoutId = null;
-                }
-            }
-            
             function onChunk(id: number | null, data: Uint8Array) {
-                // 设置数据接收超时，防止传输中断导致状态无法恢复
-                if (photoTimeoutId) {
-                    clearTimeout(photoTimeoutId);
-                }
-                
-                photoTimeoutId = setTimeout(() => {
-                    console.log('Photo data transmission timeout, resetting state');
-                    resetPhotoState();
-                }, 5000) as unknown as number;
 
                 // Resolve if packet is the first one
                 if (previousChunk === -1) {
@@ -87,12 +63,12 @@ function usePhotos(device: BluetoothRemoteGATTServer) {
                             console.log('Rotated photo', rotated);
                             setPhotos((p) => [...p, rotated]);
                         });
-                        resetPhotoState();  // 使用新的重置函数
+                        previousChunk = -1;
                         return;
                     } else {
                         if (id !== previousChunk + 1) {
+                            previousChunk = -1;
                             console.error('Invalid chunk', id, previousChunk);
-                            resetPhotoState();  // 使用新的重置函数
                             return;
                         }
                         previousChunk = id;
