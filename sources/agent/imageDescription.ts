@@ -18,18 +18,18 @@ export async function imageDescription(src: Uint8Array, model: KnownModel = 'moo
 
 export async function llamaFind(question: string, images: string): Promise<string> {
     return new Promise((resolve) => {
-        // È«¾Ö³¬Ê±±£»¤
+        // å…¨å±€è¶…æ—¶ä¿æŠ¤
         const globalTimeout = setTimeout(() => {
             console.log("Global timeout triggered - request taking too long");
             resolve("Request timed out. Please try again.");
-        }, 40000); // 40ÃëÈ«¾Ö³¬Ê±
+        }, 40000); // 40ç§’å…¨å±€è¶…æ—¶
         
         try {
             const controller = new AbortController();
             const requestTimeout = setTimeout(() => {
                 console.log("Request timeout triggered - aborting fetch");
                 controller.abort();
-            }, 30000); // 30ÃëÇëÇó³¬Ê±
+            }, 30000); // 30ç§’è¯·æ±‚è¶…æ—¶
             
             console.log("Starting llamaFind request");
             groqRequest(

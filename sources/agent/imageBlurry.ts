@@ -2,7 +2,7 @@ import { ollamaInference } from "../modules/ollama";
 
 export async function imageBlurry(src: Uint8Array): Promise<string> {
     return ollamaInference({
-        model: 'moondream:1.8b-v2-fp16', // ¸ü¸ÄÎªÄãÏ£ÍûÊ¹ÓÃµÄÄ£ĞÍÃû³Æ
+        model: 'moondream:1.8b-v2-fp16', // æ›´æ”¹ä¸ºä½ å¸Œæœ›ä½¿ç”¨çš„æ¨¡å‹åç§°
         messages: [{
             role: 'system',
             content: 'You are an very advanced model and your task is to determine if the image is broken, blurry or just low quality. You must always answer as YES or NO.'

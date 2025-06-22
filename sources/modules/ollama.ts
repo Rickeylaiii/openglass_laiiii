@@ -8,6 +8,7 @@ import { keys } from '../keys';
 
 export type KnownModel =
     | 'moondream:1.8b-v2-fp16'
+    | 'gemma3:4b'
 
 export async function ollamaInference(args: {
     model: KnownModel,
