@@ -14,7 +14,8 @@ interface SpeechToTextProps {
 export const SpeechToText: React.FC<SpeechToTextProps> = ({
   onTranscriptionComplete,
   language = 'en',
-  isTranslate = false,  recordingOptions = {
+  isTranslate = false,  
+  recordingOptions = {
     maxRecordingTime: 60, // Default maximum recording time of 60 seconds
     mimeType: 'audio/webm',
     audioBitsPerSecond: 128000
@@ -26,14 +27,6 @@ export const SpeechToText: React.FC<SpeechToTextProps> = ({
   const [error, setError] = React.useState<string | null>(null);
   const [autoTranscribeAfterStop, setAutoTranscribeAfterStop] = React.useState(false);
   
-  // Auto-transcribe when stopping recording if flag is set
-  React.useEffect(() => {
-    if (autoTranscribeAfterStop && !recorder.isRecording && recorder.audioBlob && !isTranscribing) {
-      handleTranscribe();
-      setAutoTranscribeAfterStop(false);
-    }
-  }, [recorder.isRecording, recorder.audioBlob, autoTranscribeAfterStop]);
-  
   // Format recording time as MM:SS
   const formatTime = (seconds: number): string => {
     const minutes = Math.floor(seconds / 60);
@@ -41,14 +34,15 @@ export const SpeechToText: React.FC<SpeechToTextProps> = ({
     return `${minutes.toString().padStart(2, '0')}:${remainingSeconds.toString().padStart(2, '0')}`;
   };
   
-  // Handle recording stop and auto-transcribe
+  // Define handleStopAndTranscribe first
   const handleStopAndTranscribe = React.useCallback(() => {
     setAutoTranscribeAfterStop(true);
     recorder.stopRecording();
   }, [recorder]);
   
-  // Handle transcription
-  const handleTranscribe = React.useCallback(async () => {    if (!recorder.audioBlob) {
+  // Then define handleTranscribe
+  const handleTranscribe = React.useCallback(async () => {    
+    if (!recorder.audioBlob) {
       setError('No audio recording available');
       return;
     }
@@ -74,7 +68,8 @@ export const SpeechToText: React.FC<SpeechToTextProps> = ({
         setTranscription(result.text);
         if (onTranscriptionComplete) {
           onTranscriptionComplete(result.text);
-        }      } else {
+        }
+      } else {
         setError('Transcription result is empty');
       }
     } catch (err) {
@@ -84,6 +79,41 @@ export const SpeechToText: React.FC<SpeechToTextProps> = ({
       setIsTranscribing(false);
     }
   }, [recorder.audioBlob, language, isTranslate, onTranscriptionComplete]);
+  
+  // AFTER all functions are defined, use them in effects
+  // ALT key controls recording
+  React.useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      // Only trigger on ALT key press
+      if (event.key === 'Alt') {
+        event.preventDefault(); // Prevent browser menu trigger
+        
+        if (recorder.isRecording) {
+          // If recording, stop and transcribe
+          console.log('ALT pressed: stopping and transcribing');
+          handleStopAndTranscribe();
+        } else if (!isTranscribing && !recorder.audioBlob) {
+          // If not recording, start recording
+          console.log('ALT pressed: starting recording');
+          recorder.startRecording();
+        }
+      }
+    };
+    
+    window.addEventListener('keydown', handleKeyDown);
+    
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [recorder, isTranscribing, handleStopAndTranscribe]);
+  
+  // Auto-transcribe when stopping recording if flag is set
+  React.useEffect(() => {
+    if (autoTranscribeAfterStop && !recorder.isRecording && recorder.audioBlob && !isTranscribing) {
+      handleTranscribe();
+      setAutoTranscribeAfterStop(false);
+    }
+  }, [recorder.isRecording, recorder.audioBlob, autoTranscribeAfterStop, handleTranscribe]);
   
   // If recording is not supported on this platform, show a message
   if (!recorder.isSupported) {
@@ -103,7 +133,13 @@ export const SpeechToText: React.FC<SpeechToTextProps> = ({
       )}
       
       <View style={styles.statusContainer}>
-        <Text style={styles.statusText}>{recorder.getStatusText()}</Text>
+        <Text style={styles.statusText}>
+          {recorder.isRecording ? 
+            "Recording... (Press ALT to stop and transcribe)" : 
+            recorder.audioBlob ? 
+              "Recording complete" : 
+              "Press ALT to start recording"}
+        </Text>
         {recorder.isRecording && recorder.maxRecordingTime > 0 && (
           <View style={styles.progressContainer}>
             <View style={[styles.progressBar, { width: `${recorder.getRecordingProgress()}%` }]} />
@@ -121,7 +157,7 @@ export const SpeechToText: React.FC<SpeechToTextProps> = ({
             onPress={recorder.startRecording}
             disabled={isTranscribing}
           >
-            <Text style={styles.buttonText}>Start Recording</Text>
+            <Text style={styles.buttonText}>Start Recording (or press ALT)</Text>
           </TouchableOpacity>
         ) : (
           <View style={styles.recordingControls}>
@@ -156,7 +192,7 @@ export const SpeechToText: React.FC<SpeechToTextProps> = ({
               style={[styles.button, styles.transcribeNowButton]} 
               onPress={handleStopAndTranscribe}
             >
-              <Text style={styles.buttonText}>Stop & Transcribe</Text>
+              <Text style={styles.buttonText}>Stop and Transcribe (or press ALT)</Text>
             </TouchableOpacity>
           </View>
         )}

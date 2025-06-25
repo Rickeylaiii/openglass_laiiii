@@ -181,6 +181,32 @@ export const DeviceView = React.memo((props: { device: BluetoothRemoteGATTServer
         audioBitsPerSecond: 128000
     });
     
+    // 添加对空格键按下事件的处理
+    const textInputRef = React.useRef<TextInput>(null);
+    const isTextInputFocused = React.useRef<boolean>(false);
+    
+    // 切换语音识别状态的函数
+    const toggleSpeechToText = React.useCallback(() => {
+        setShowSpeechToText(prev => !prev);
+    }, []);
+    
+    // 键盘事件监听器，检测空格键
+    React.useEffect(() => {
+        const handleKeyDown = (event: KeyboardEvent) => {
+            // 只在空格键被按下且输入框未获取焦点时触发
+            if (event.code === 'Space' && !isTextInputFocused.current) {
+                event.preventDefault(); // 防止页面滚动
+                toggleSpeechToText(); // 仅控制显示/隐藏语音输入面板
+            }
+        };
+        
+        window.addEventListener('keydown', handleKeyDown);
+        
+        return () => {
+            window.removeEventListener('keydown', handleKeyDown);
+        };
+    }, [toggleSpeechToText]);
+    
     // 处理语音转文本完成的回调函数
     const handleTranscriptionComplete = React.useCallback((text: string) => {
         setTranscribedText(text);
@@ -281,6 +307,7 @@ export const DeviceView = React.memo((props: { device: BluetoothRemoteGATTServer
                         justifyContent: 'space-between'
                     }}>
                         <TextInput
+                            ref={textInputRef}
                             style={{ 
                                 color: 'white', 
                                 height: 64, 
@@ -288,8 +315,8 @@ export const DeviceView = React.memo((props: { device: BluetoothRemoteGATTServer
                                 borderRadius: 16, 
                                 backgroundColor: 'rgb(48 48 48)', 
                                 padding: 16,
-                                flex: 1, // 让输入框占据大部分空间
-                                marginRight: 10 // 与语音按钮之间的间距
+                                flex: 1,
+                                marginRight: 10
                             }}
                             placeholder='What do you need?'
                             placeholderTextColor={'#888'}
@@ -297,11 +324,12 @@ export const DeviceView = React.memo((props: { device: BluetoothRemoteGATTServer
                             value={transcribedText}
                             onChangeText={setTranscribedText}
                             onSubmitEditing={(e) => agent.answer(e.nativeEvent.text)}
+                            onFocus={() => { isTextInputFocused.current = true; }}
+                            onBlur={() => { isTextInputFocused.current = false; }}
                         />
                         
-                        {/* 简化的语音输入按钮，点击后显示/隐藏语音识别组件 */}
                         <TouchableOpacity
-                            onPress={() => setShowSpeechToText(!showSpeechToText)}
+                            onPress={toggleSpeechToText}
                             style={{
                                 backgroundColor: showSpeechToText ? '#4A148C' : '#673AB7',
                                 width: 64,
