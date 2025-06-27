@@ -29,7 +29,7 @@ except Exception as e:
     logger.error(f"Error loading .env: {e}")
 
 # 从环境变量获取API密钥，如果不存在则使用默认值
-MAP_API_KEY = os.environ.get("MAP_API_KEY", "66f046533af9f06b10ab1b9c8016b2e1")
+MAP_API_KEY = os.environ.get("MAP_API_KEY", "...")
 logger.info(f"Using MAP_API_KEY: {MAP_API_KEY[:4]}...")
 
 # 初始化MCP实例
