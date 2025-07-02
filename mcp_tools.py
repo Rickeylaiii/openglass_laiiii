@@ -129,19 +129,5 @@ get_weather_public = get_weather
 
 # 测试代码
 if __name__ == "__main__":
-    print("Testing MCP tools directly...")
-    
-    # 测试工具函数
-    city = "beijing"
-    print(f"\nTesting weather API with city: {city}")
-    weather_data = get_weather(city)
-    print(f"Weather API response: {weather_data}")
-    
-    address = "天安门"
-    print(f"\nTesting geocode API with address: {address}")
-    geocode_data = geocode(address)
-    print(f"Geocode API response: {geocode_data}")
-    
-    # 如果需要作为MCP服务运行
-    # print("Starting MCP server...")
-    # mcp.run(transport="stdio")  # 取消注释以启动MCP服务器
+    logger.info("Starting MCP server...")
+    mcp.run(transport="stdio") 
