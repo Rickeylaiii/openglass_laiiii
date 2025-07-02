@@ -189,7 +189,7 @@ export class Agent {
     private async handleWeatherQuery(question: string): Promise<string> {
         try {
             // Extract city name
-            const cityPrompt = `Extract the Chinese city name from the following question, return only the city name without any explanation or additional text:
+            const cityPrompt = `Extract the city name from the following question. The city could be in English or Chinese. Return only the city name itself, without any explanation or additional text:
             "${question}"`;
             
             const cityName = await groqRequest("You are an assistant that precisely extracts city names.", cityPrompt);
